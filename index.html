@@ -93,7 +93,7 @@
 			var dateFormatTabs = document.getElementById('date_format_tabs');
 			var btToggle = document.getElementById('bt_toggle');
 			var dateChildren = dateFormatTabs.getElementsByClassName('tab-button');
-			if(localStorage['date_format'] == null){
+			if(localStorage['date_format'] != null){
 				for(var i = 0; i<dateChildren.length; i++)
 				{
 					if(dateChildren[i].innerHTML ==  localStorage['date_format'])
@@ -109,7 +109,7 @@
 				localStorage['date_format'] = 'DDMM';
 			}
 
-			if(localStorage['bt_toggle'] == null)
+			if(localStorage['bt_toggle'] != null)
 			{
 				btToggle.checked = JSON.parse(localStorage['bt_toggle']);
 			}

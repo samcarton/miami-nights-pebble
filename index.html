@@ -19,7 +19,7 @@
 	    		<label class="item item-subtitle-wrapper">
 		        	Bluetooth Notification
 		        	<div class="item-subtitle">Vibrate on Bluetooth Connect/Disconnect</div>
-		        	<input id="bt_toggle" type="checkbox" class="item-toggle" name="toggle-1">
+		        	<input id="bt_toggle" type="checkbox" class="item-toggle" name="toggle-1" checked>
 		        </label>
 	    	</div>
 	    </div>
@@ -27,7 +27,7 @@
 		        <div class="item-container-header">Date Format</div>
 		        <div class="item-container-content">
 		        <label id="date_format_tabs" class="item tab-buttons">
-		          <a name="tab-1" class="tab-button">DDMM</a>
+		          <a name="tab-1" class="tab-button active">DDMM</a>
 		          <a name="tab-1" class="tab-button">MMDD</a>
 		          <a name="tab-1" class="tab-button">OFF</a>
 		        </label>
@@ -78,18 +78,15 @@
 		var saveButton = document.getElementById('save_button');
 		saveButton.addEventListener('click', function() {
 			console.log('Save Pressed');
-			var activeTab = document.getElementById('date_format_tabs');
-			var children = activeTab.getElementsByClassName('active');
-			if(children.length != 1)
-			{
-				console.Log('Error: Must only have one child selected in date format tabs.');
-			}
-			else
-			{
-				console.log(children[0].innerHTML);
-			}
 			var return_to = getQueryParam('return_to', 'pebblejs://close#');
 			document.location = return_to + encodeURIComponent(JSON.stringify(getConfigData()));
+		});
+
+		var cancelButton = document.getElementById('cancel_button');
+		cancelButton.addEventListener('click', function() {
+			console.log('Cancel Pressed');			
+			var return_to = getQueryParam('return_to', 'pebblejs://close#');
+			document.location = return_to;
 		});
 
 		(function() {

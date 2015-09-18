@@ -1,7 +1,10 @@
 {
-    "appKeys": {},
+    "appKeys": {
+        "KEY_BT_TOGGLE": 1,
+        "KEY_DATE_FORMAT": 0
+    },
     "capabilities": [
-        ""
+        "configurable"
     ],
     "companyName": "Sam Carton",
     "longName": "Miami Nights",
@@ -77,7 +80,7 @@
     "targetPlatforms": [
         "basalt"
     ],
-    "uuid": "633c5168-a727-454d-ad8f-34b06834e410",
+    "uuid": "f80fc52a-9fde-4a8b-836f-aa0125a55bd8",
     "versionLabel": "1.0",
     "watchapp": {
         "watchface": true

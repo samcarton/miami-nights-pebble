@@ -1,5 +1,9 @@
 #include <pebble.h>  
 #include "gbitmap_color_palette_manipulator.h"
+
+  
+#define KEY_DATE_FORMAT 0
+#define KEY_BT_TOGGLE 1
   
 static bool is24hrFormat = true;
 
@@ -8,7 +12,13 @@ static Layer* window_layer;
 
 TextLayer* date_text_layer;
 static char date_text[] = "\0\0\0\0\0";
-const char dateFormat[] = "%d%m";
+static char dateFormat[] = "%d%m";
+const char DDMMdateFormat[] = "%d%m";
+const char DDMM_FORMAT_KEY[] = "DDMM";
+const char MMDDdateFormat[] = "%m%d";
+const char MMDD_FORMAT_KEY[] = "MMDD";
+const char OFF_FORMAT_KEY[] = "OFF";
+static char PERSISTED_FORMAT[] = "DDMM";
 static GFont s_font_teko_sb_20;
 
 static BitmapLayer* hours_tens_layer = NULL;
@@ -53,6 +63,9 @@ static int debugHours = 1;
 static int debugMinutes = 0;
 #endif
 
+static void force_tick();
+  
+  
 static void unload_bitmap(BitmapLayer** layer, GBitmap** bitmap){
   if(*layer){
     layer_remove_from_parent(bitmap_layer_get_layer(*layer));
@@ -191,6 +204,35 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed){
   text_layer_set_text(date_text_layer, date_text);
 }
 
+static void set_date_format(char* dateFormatOption)
+{
+  if(strcmp(OFF_FORMAT_KEY, dateFormatOption) == 0)   {
+    strcpy(dateFormat, "\0");
+    layer_set_hidden(text_layer_get_layer(date_text_layer), true);    
+    return;
+  }
+  
+  if(strcmp(DDMM_FORMAT_KEY, dateFormatOption) == 0){
+    strcpy(dateFormat, DDMMdateFormat);
+    layer_set_hidden(text_layer_get_layer(date_text_layer), false);
+    force_tick();
+    return;
+  }
+  
+  if(strcmp(MMDD_FORMAT_KEY, dateFormatOption) == 0){
+    strcpy(dateFormat, MMDDdateFormat);
+    layer_set_hidden(text_layer_get_layer(date_text_layer), false);
+    force_tick();
+    return;
+  }
+}
+
+static void force_tick(){
+  time_t now = time(NULL);
+  struct tm *tick_time = localtime(&now);
+  handle_tick(tick_time, MINUTE_UNIT);
+}
+
 static void window_load(Window *window) {    
   window_layer = window_get_root_layer(window);
   
@@ -203,9 +245,7 @@ static void window_load(Window *window) {
   text_layer_set_font(date_text_layer, s_font_teko_sb_20);
   layer_add_child(window_layer, text_layer_get_layer(date_text_layer));
   
-  time_t now = time(NULL);
-  struct tm *tick_time = localtime(&now);
-  handle_tick(tick_time, MINUTE_UNIT);
+  force_tick();
 }
 
 
@@ -216,6 +256,49 @@ static void window_unload(Window *window) {
   unload_bitmap(&hours_ones_layer, &hours_ones);
   unload_bitmap(&minutes_tens_layer, &minutes_tens);
   unload_bitmap(&minutes_ones_layer, &minutes_ones);
+}
+
+// thanks to @faquin :)
+// https://github.com/faquin/miami-nights-pebble
+static void bt_handler(bool connected) {
+  // Show current connection state
+  if (connected) {
+    vibes_long_pulse(); // vibrate long pulse when connection is back
+  } else {
+    vibes_double_pulse(); // vibrate two short pulses when connection is lost
+  }
+}
+
+static void inbox_received_handler(DictionaryIterator *iter, void *context) {
+  
+  Tuple* bluetooth_toggle_t = dict_find(iter, KEY_BT_TOGGLE);
+  if(bluetooth_toggle_t && bluetooth_toggle_t->value->int32 > 0) {
+    
+    // Enable bluetooth notification
+    bluetooth_connection_service_subscribe(bt_handler);
+    bt_handler(true);
+    //APP_LOG(APP_LOG_LEVEL_DEBUG, "BT Toggle: TRUE");
+    
+    // Persist value
+    persist_write_bool(KEY_BT_TOGGLE, true);    
+  } else {
+    bluetooth_connection_service_unsubscribe();
+    //APP_LOG(APP_LOG_LEVEL_DEBUG, "BT Toggle: FALSE");
+    
+    // persist
+    persist_write_bool(KEY_BT_TOGGLE, false);
+  }
+  
+  Tuple* date_format_t = dict_find(iter, KEY_DATE_FORMAT);  
+  if(date_format_t) {
+    
+    //APP_LOG(APP_LOG_LEVEL_DEBUG, "Date Format: %s", date_format_t->value->cstring);
+    
+    set_date_format(date_format_t->value->cstring);
+    
+    // Persist value
+    persist_write_string(KEY_DATE_FORMAT, date_format_t->value->cstring);
+  }
 }
 
 void handle_init(void) {  
@@ -233,10 +316,27 @@ void handle_init(void) {
                                | SECOND_UNIT
 #endif
                                , handle_tick);
+  
+  app_message_register_inbox_received(inbox_received_handler);
+  app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
+  
+  if(persist_exists(KEY_DATE_FORMAT)){
+    persist_read_string(KEY_DATE_FORMAT, PERSISTED_FORMAT, sizeof(PERSISTED_FORMAT));
+    set_date_format(PERSISTED_FORMAT);
+  }
+  if(persist_exists(KEY_BT_TOGGLE)){
+    if(persist_read_bool(KEY_BT_TOGGLE)){
+      bluetooth_connection_service_subscribe(bt_handler);
+    }    
+  }
+  else{ // default to BT notif enabled
+    bluetooth_connection_service_subscribe(bt_handler); 
+  }
+  
 }
 
 void handle_deinit(void) {
-  
+  app_message_deregister_callbacks();
   window_destroy(_window);
 }
 

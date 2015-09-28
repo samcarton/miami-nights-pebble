@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Miami Nights Config</title>
+	<link rel="stylesheet" href="lib/css/slate.min.css">
+</head>
+<body>
+	<form id="main-form">
+		<div class="item-container">
+	      <div class="item-container-content">
+	        <div class="item">
+	          Miami Nights Watchface Configuration
+	        </div>
+	      </div>
+	    </div>
+
+		<div class="item-container">
+			<div class="item-container-header">Bluetooth</div>
+	    	<div class="item-container-content">
+	    		<label class="item item-subtitle-wrapper">
+		        	Bluetooth Notification
+		        	<div class="item-subtitle">Vibrate on Bluetooth Connect/Disconnect</div>
+		        	<input id="bt_toggle" type="checkbox" class="item-toggle" name="toggle-1">
+		        </label>
+	    	</div>
+	    </div>
+
+		<div class="item-container">
+			<div class="item-container-header">Hours Display</div>
+	    	<div class="item-container-content">
+	    		<label class="item item-subtitle-wrapper">
+		        	Show Leading Zero
+		        	<div class="item-subtitle">Show the leading zero for single-digit hours</div>
+		        	<input id="lz_toggle" type="checkbox" class="item-toggle" name="toggle-1">
+		        </label>
+	    	</div>
+	    <!-- </div>
+	    <div class="item-container"> -->
+	    	<div class="item-container-content">
+	    		<label class="item item-subtitle-wrapper">
+		        	Left Align Hour
+		        	<div class="item-subtitle">Left align the single digit hour when no leading zero is shown</div>
+		        	<input id="la_toggle" type="checkbox" class="item-toggle" name="toggle-1">
+		        </label>
+	    	</div>
+	    </div>
+
+		<div class="item-container">
+		        <div class="item-container-header">Date Format</div>
+		        <div class="item-container-content">
+		        <label id="date_format_tabs" class="item tab-buttons">
+		          <a name="tab-1" class="tab-button">DDMM</a>
+		          <a name="tab-1" class="tab-button">MMDD</a>
+		          <a name="tab-1" class="tab-button">OFF</a>
+		        </label>
+			</div>
+		</div>
+		<div class="item-container">
+			<div class="button-container">
+    			<input id="save_button" type="button" class="item-button" value="SAVE">    			
+  			</div>
+  		</div>
+  		<div class="item-container">
+  			<div class="button-container">
+    			<input id="cancel_button" type="button" class="item-button" value="CANCEL">
+  			</div>
+		</div>
+	</form>
+	<script type="text/javascript" src="lib/js/slate.min.js"></script>
+	<script>		
+		function getConfigData() {
+			var dateFormatTabs = document.getElementById('date_format_tabs');
+			var btToggle = document.getElementById('bt_toggle');
+			var lzToggle = document.getElementById('lz_toggle');
+			var laToggle = document.getElementById('la_toggle');
+			var activeDateFormat = dateFormatTabs.getElementsByClassName('active')[0].innerHTML;			
+
+			var options = {
+				'date_format' : activeDateFormat,
+				'bt_toggle' : btToggle.checked,
+				'lz_toggle' : lzToggle.checked,
+				'la_toggle' : laToggle.checked
+			};
+
+			localStorage['date_format'] = options['date_format'];
+			localStorage['bt_toggle'] = options['bt_toggle'];
+			localStorage['lz_toggle'] = options['lz_toggle'];
+			localStorage['la_toggle'] = options['la_toggle'];
+
+			console.log('Got options: ' + JSON.stringify(options));
+			return options;
+		}
+
+		function getQueryParam(variable, defaultValue) {
+		    var query = location.search.substring(1);
+		    var vars = query.split('&');
+		    for (var i = 0; i < vars.length; i++) {
+		      var pair = vars[i].split('=');
+		      if (pair[0] === variable) {
+		        return decodeURIComponent(pair[1]);
+		      }
+		    }
+		    return defaultValue || false;
+		  }
+
+		var saveButton = document.getElementById('save_button');
+		saveButton.addEventListener('click', function() {
+			console.log('Save Pressed');
+			var return_to = getQueryParam('return_to', 'pebblejs://close#');
+			document.location = return_to + encodeURIComponent(JSON.stringify(getConfigData()));
+		});
+
+		var cancelButton = document.getElementById('cancel_button');
+		cancelButton.addEventListener('click', function() {
+			console.log('Cancel Pressed');			
+			var return_to = getQueryParam('return_to', 'pebblejs://close#');
+			document.location = return_to;
+		});
+
+		(function() {
+			var dateFormatTabs = document.getElementById('date_format_tabs');
+			var btToggle = document.getElementById('bt_toggle');
+			var lzToggle = document.getElementById('lz_toggle');
+			var laToggle = document.getElementById('la_toggle');
+			var dateChildren = dateFormatTabs.getElementsByClassName('tab-button');
+			if(localStorage['date_format'] != null){
+				for(var i = 0; i<dateChildren.length; i++)
+				{
+					if(dateChildren[i].innerHTML ==  localStorage['date_format'])
+					{
+						dateChildren[i].className = "tab-button active";
+						break;
+					}
+				}				
+			}
+			else
+			{
+				dateChildren[0].className = "tab-button active";
+				localStorage['date_format'] = 'DDMM';
+			}
+
+			if(localStorage['bt_toggle'] != null)
+			{
+				btToggle.checked = JSON.parse(localStorage['bt_toggle']);
+			}
+			else
+			{
+				btToggle.checked = true;
+				localStorage['bt_toggle'] = true;
+			}
+
+			if(localStorage['lz_toggle'] != null)
+			{
+				lzToggle.checked = JSON.parse(localStorage['lz_toggle']);
+			}
+			else
+			{
+				lzToggle.checked = true;
+				localStorage['lz_toggle'] = true;
+			}
+
+			if(localStorage['la_toggle'] != null)
+			{
+				laToggle.checked = JSON.parse(localStorage['la_toggle']);
+			}
+			else
+			{
+				laToggle.checked = false;
+				localStorage['la_toggle'] = false;
+			}
+		})();
+	</script>
+</body>
+</html> 

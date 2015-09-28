@@ -4,6 +4,8 @@
   
 #define KEY_DATE_FORMAT 0
 #define KEY_BT_TOGGLE 1
+#define KEY_LZ_TOGGLE 2
+#define KEY_LA_TOGGLE 3
   
 static bool is24hrFormat = true;
 
@@ -40,6 +42,8 @@ const int MINS_SPACING_Y_WITH_DATE = 75;
 const int MINS_SPACING_Y_WITHOUT_DATE = 79;
 
 static bool show_leading_zero = true;
+static bool left_align_hour = false;
+
 
 // Font is "True Lies" by Jonathan S. Harris
 // http://tattoowoo.com/index.php?main_page=product_info&cPath=72&products_id=1678
@@ -111,16 +115,21 @@ static void load_bitmap(unsigned short image_number, BitmapLayer** layer, GBitma
 
 static void update_hours(unsigned short hours){  
   unsigned short hoursTensSpacing = 0;
+  unsigned short hoursOnesX = 48;
   if(hours < 10 || hours == 24) // && show leading zero
   {
+    hoursTensSpacing = 5;
+    
     if(show_leading_zero){
-      load_bitmap(0,&hours_tens_layer, &hours_tens, GColorCyan, 2, top_y); //0    
+      load_bitmap(0,&hours_tens_layer, &hours_tens, GColorCyan, 2, top_y); //0 
     }
     else{
       unload_bitmap(&hours_tens_layer, &hours_tens);
-    }
-      
-    hoursTensSpacing = 5;
+      if(left_align_hour){
+        hoursOnesX = 2;
+      }
+    }      
+    
   }
   else
   {    
@@ -139,12 +148,24 @@ static void update_hours(unsigned short hours){
   // hours ones
   if(hours == 24) // or 12 and 12hourtime
   {
-    load_bitmap(0,&hours_ones_layer, &hours_ones, GColorCyan, 57, top_y);   
+    if(show_leading_zero == true || (show_leading_zero == false && left_align_hour == false)) {
+      hoursOnesX += 9;
+    }
+    load_bitmap(0,&hours_ones_layer, &hours_ones, GColorCyan, hoursOnesX, top_y);   
   }
   else
   {    
     int hourOnes = hours%10;    
-    load_bitmap(hourOnes,&hours_ones_layer, &hours_ones, GColorCyan, 48 + ONES_SPACINGS[hourOnes] + hoursTensSpacing, top_y); 
+    if(show_leading_zero == true || (show_leading_zero == false && left_align_hour == false)) {
+      hoursOnesX = hoursOnesX + ONES_SPACINGS[hourOnes] + hoursTensSpacing;
+    }
+    else{
+      if(hourOnes == 1){
+        hoursOnesX += 20;
+      }
+      hoursOnesX = hoursOnesX + ONES_SPACINGS[hourOnes];
+    }
+    load_bitmap(hourOnes,&hours_ones_layer, &hours_ones, GColorCyan, hoursOnesX, top_y); 
   }    
 }
 
@@ -322,6 +343,34 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
     // Persist value
     persist_write_string(KEY_DATE_FORMAT, date_format_t->value->cstring);
   }
+  
+  Tuple* leading_zero_toggle_t = dict_find(iter, KEY_LZ_TOGGLE);
+  if(leading_zero_toggle_t && leading_zero_toggle_t->value->int32 > 0) {
+    show_leading_zero = true;
+    
+    // Persist value
+    persist_write_bool(KEY_LZ_TOGGLE, true);    
+  } else {
+    show_leading_zero = false;
+    
+    // persist
+    persist_write_bool(KEY_LZ_TOGGLE, false);
+  }
+  
+  Tuple* left_align_toggle_t = dict_find(iter, KEY_LA_TOGGLE);
+  if(left_align_toggle_t && left_align_toggle_t->value->int32 > 0) {
+    left_align_hour = true;
+    
+    // Persist value
+    persist_write_bool(KEY_LA_TOGGLE, true);    
+  } else {
+    left_align_hour = false;
+    
+    // persist
+    persist_write_bool(KEY_LA_TOGGLE, false);
+  }
+  
+  force_tick();
 }
 
 void handle_init(void) {  
@@ -356,6 +405,19 @@ void handle_init(void) {
     bluetooth_connection_service_subscribe(bt_handler); 
   }
   
+  if(persist_exists(KEY_LZ_TOGGLE)){
+    show_leading_zero = persist_read_bool(KEY_LZ_TOGGLE);    
+  }
+  else{ // default to show leading zero
+    show_leading_zero = true;
+  }
+  
+  if(persist_exists(KEY_LA_TOGGLE)){
+    left_align_hour = persist_read_bool(KEY_LA_TOGGLE);    
+  }
+  else{ // default to disable leftalign hour
+    left_align_hour = false;
+  }    
 }
 
 void handle_deinit(void) {

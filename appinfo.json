@@ -1,7 +1,9 @@
 {
     "appKeys": {
         "KEY_BT_TOGGLE": 1,
-        "KEY_DATE_FORMAT": 0
+        "KEY_DATE_FORMAT": 0,
+        "KEY_LA_TOGGLE": 3,
+        "KEY_LZ_TOGGLE": 2
     },
     "capabilities": [
         "configurable"
@@ -81,7 +83,7 @@
         "basalt"
     ],
     "uuid": "633c5168-a727-454d-ad8f-34b06834e410",
-    "versionLabel": "1.1",
+    "versionLabel": "1.2",
     "watchapp": {
         "watchface": true
     }

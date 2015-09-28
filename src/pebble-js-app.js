@@ -1,6 +1,6 @@
 Pebble.addEventListener('showConfiguration', function(e) {
   // Show config page
-  Pebble.openURL('http://samcarton.github.io/miami-nights-pebble/index.html');
+  Pebble.openURL('http://samcarton.github.io/miami-nights-pebble/config.v1.2.html');
 });
 
 Pebble.addEventListener('webviewclosed', function(e) {
@@ -13,9 +13,18 @@ Pebble.addEventListener('webviewclosed', function(e) {
   if(config_data['bt_toggle'] == true){
     dict['KEY_BT_TOGGLE'] = config_data['bt_toggle'];
   }
+  
   dict['KEY_DATE_FORMAT'] = config_data['date_format'];
   
+  // leading zero toggle
+  if(config_data['lz_toggle'] == true){
+    dict['KEY_LZ_TOGGLE'] = config_data['lz_toggle'];
+  }
   
+  // left align toggle
+  if(config_data['la_toggle'] == true){
+    dict['KEY_LA_TOGGLE'] = config_data['la_toggle'];
+  }
 
   // Send settings to Pebble watchapp
   Pebble.sendAppMessage(dict, function(){

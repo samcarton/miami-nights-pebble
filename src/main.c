@@ -31,6 +31,16 @@ static BitmapLayer* minutes_ones_layer = NULL;
 static GBitmap* minutes_tens = NULL;
 static GBitmap* minutes_ones = NULL;
 
+static int top_y = 2;
+const int TOP_Y_WITH_DATE = 2;
+const int TOP_Y_WITHOUT_DATE = 10;
+
+static int mins_spacing_y = 75;
+const int MINS_SPACING_Y_WITH_DATE = 75;
+const int MINS_SPACING_Y_WITHOUT_DATE = 79;
+
+static bool show_leading_zero = true;
+
 // Font is "True Lies" by Jonathan S. Harris
 // http://tattoowoo.com/index.php?main_page=product_info&cPath=72&products_id=1678
 // exported digits to PNG to be able to use large-size fonts (some characters are too big
@@ -103,7 +113,13 @@ static void update_hours(unsigned short hours){
   unsigned short hoursTensSpacing = 0;
   if(hours < 10 || hours == 24) // && show leading zero
   {
-    load_bitmap(0,&hours_tens_layer, &hours_tens, GColorCyan, 2, 2); //0
+    if(show_leading_zero){
+      load_bitmap(0,&hours_tens_layer, &hours_tens, GColorCyan, 2, top_y); //0    
+    }
+    else{
+      unload_bitmap(&hours_tens_layer, &hours_tens);
+    }
+      
     hoursTensSpacing = 5;
   }
   else
@@ -111,11 +127,11 @@ static void update_hours(unsigned short hours){
     int hourTens = hours/10;
     if(hourTens == 1)
     {
-      load_bitmap(hourTens,&hours_tens_layer, &hours_tens, GColorCyan, 22, 2); //1
+      load_bitmap(hourTens,&hours_tens_layer, &hours_tens, GColorCyan, 22, top_y); //1
     }
     else // 2
     {
-      load_bitmap(hourTens,&hours_tens_layer, &hours_tens, GColorCyan, 2, 2); //2       
+      load_bitmap(hourTens,&hours_tens_layer, &hours_tens, GColorCyan, 2, top_y); //2       
       hoursTensSpacing = 14;
     }    
   }
@@ -123,12 +139,12 @@ static void update_hours(unsigned short hours){
   // hours ones
   if(hours == 24) // or 12 and 12hourtime
   {
-    load_bitmap(0,&hours_ones_layer, &hours_ones, GColorCyan, 57, 2);   
+    load_bitmap(0,&hours_ones_layer, &hours_ones, GColorCyan, 57, top_y);   
   }
   else
   {    
     int hourOnes = hours%10;    
-    load_bitmap(hourOnes,&hours_ones_layer, &hours_ones, GColorCyan, 48 + ONES_SPACINGS[hourOnes] + hoursTensSpacing, 2); 
+    load_bitmap(hourOnes,&hours_ones_layer, &hours_ones, GColorCyan, 48 + ONES_SPACINGS[hourOnes] + hoursTensSpacing, top_y); 
   }    
 }
 
@@ -137,15 +153,15 @@ static void update_minutes(unsigned short minutes){
   
   //tens
   if(minutes<10){    
-    load_bitmap(0,&minutes_tens_layer, &minutes_tens, GColorMagenta, 5, 77) ;
+    load_bitmap(0,&minutes_tens_layer, &minutes_tens, GColorMagenta, 5, top_y + mins_spacing_y) ;
   }
   else{
     unsigned short minuteTens = minutes/10;
     if(minuteTens == 1){
-      load_bitmap(minuteTens,&minutes_tens_layer, &minutes_tens, GColorMagenta, 31, 77) ;  
+      load_bitmap(minuteTens,&minutes_tens_layer, &minutes_tens, GColorMagenta, 31, top_y + mins_spacing_y) ;  
     }
     else{
-      load_bitmap(minuteTens,&minutes_tens_layer, &minutes_tens, GColorMagenta, 5, 77) ;
+      load_bitmap(minuteTens,&minutes_tens_layer, &minutes_tens, GColorMagenta, 5, top_y + mins_spacing_y) ;
       if(minuteTens == 5 && minutes != 55){
         minutesTensSpacing = 5;
       }
@@ -157,7 +173,7 @@ static void update_minutes(unsigned short minutes){
   
   //ones
   unsigned short minuteOnes = minutes%10;
-  load_bitmap(minuteOnes,&minutes_ones_layer, &minutes_ones, GColorMagenta, 57 + ONES_SPACINGS[minuteOnes] + minutesTensSpacing, 77) ;
+  load_bitmap(minuteOnes,&minutes_ones_layer, &minutes_ones, GColorMagenta, 57 + ONES_SPACINGS[minuteOnes] + minutesTensSpacing, top_y + mins_spacing_y) ;
   
 }
 
@@ -209,12 +225,17 @@ static void set_date_format(char* dateFormatOption)
   if(strcmp(OFF_FORMAT_KEY, dateFormatOption) == 0)   {
     strcpy(dateFormat, "\0");
     layer_set_hidden(text_layer_get_layer(date_text_layer), true);    
+    top_y = TOP_Y_WITHOUT_DATE;
+    mins_spacing_y = MINS_SPACING_Y_WITHOUT_DATE;
+    force_tick();
     return;
   }
   
   if(strcmp(DDMM_FORMAT_KEY, dateFormatOption) == 0){
     strcpy(dateFormat, DDMMdateFormat);
     layer_set_hidden(text_layer_get_layer(date_text_layer), false);
+    top_y = TOP_Y_WITH_DATE;
+    mins_spacing_y = MINS_SPACING_Y_WITH_DATE;
     force_tick();
     return;
   }
@@ -222,6 +243,8 @@ static void set_date_format(char* dateFormatOption)
   if(strcmp(MMDD_FORMAT_KEY, dateFormatOption) == 0){
     strcpy(dateFormat, MMDDdateFormat);
     layer_set_hidden(text_layer_get_layer(date_text_layer), false);
+    top_y = TOP_Y_WITH_DATE;
+    mins_spacing_y = MINS_SPACING_Y_WITH_DATE;
     force_tick();
     return;
   }

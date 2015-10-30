@@ -78,7 +78,8 @@ static int debugMinutes = 0;
 #endif
 
 static void force_tick();
-  
+void apply_persisted_values();
+static void inbox_received_handler(DictionaryIterator *iter, void *context);
   
 static void unload_bitmap(BitmapLayer** layer, GBitmap** bitmap){
   if(*layer){
@@ -288,6 +289,10 @@ static void window_load(Window *window) {
   text_layer_set_text(date_text_layer, date_text);
   text_layer_set_font(date_text_layer, s_font_teko_sb_20);
   layer_add_child(window_layer, text_layer_get_layer(date_text_layer));
+    
+  app_message_register_inbox_received(inbox_received_handler);
+  app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
+  apply_persisted_values();
   
   force_tick();
 }
@@ -373,25 +378,7 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
   force_tick();
 }
 
-void handle_init(void) {  
-  is24hrFormat = clock_is_24h_style();
-  
-  _window = window_create();
-  window_set_background_color(_window, GColorBlack);
-  window_set_window_handlers(_window, (WindowHandlers) {.load = window_load, .unload = window_unload});
-    
-  window_stack_push(_window, true);
-  
-  
-  tick_timer_service_subscribe(MONTH_UNIT | DAY_UNIT | HOUR_UNIT | MINUTE_UNIT 
-#ifdef DEBUGTIME                               
-                               | SECOND_UNIT
-#endif
-                               , handle_tick);
-  
-  app_message_register_inbox_received(inbox_received_handler);
-  app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
-  
+void apply_persisted_values() {  
   if(persist_exists(KEY_DATE_FORMAT)){
     persist_read_string(KEY_DATE_FORMAT, PERSISTED_FORMAT, sizeof(PERSISTED_FORMAT));
     set_date_format(PERSISTED_FORMAT);
@@ -420,7 +407,26 @@ void handle_init(void) {
   }    
 }
 
+void handle_init(void) {  
+  is24hrFormat = clock_is_24h_style();
+  
+  _window = window_create();
+  window_set_background_color(_window, GColorBlack);
+  window_set_window_handlers(_window, (WindowHandlers) {.load = window_load, .unload = window_unload});
+    
+  window_stack_push(_window, true);
+  
+  
+  tick_timer_service_subscribe(MONTH_UNIT | DAY_UNIT | HOUR_UNIT | MINUTE_UNIT 
+#ifdef DEBUGTIME                               
+                               | SECOND_UNIT
+#endif
+                               , handle_tick);  
+  
+}
+
 void handle_deinit(void) {
+  tick_timer_service_unsubscribe();
   app_message_deregister_callbacks();
   window_destroy(_window);
 }

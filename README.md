@@ -10,6 +10,6 @@ Smaller Date font is [Teko (Open Source)](https://www.google.com/fonts/specimen/
 Uses the [GBitmap-Colour-Palette-Manipulator](https://github.com/rebootsramblings/GBitmap-Colour-Palette-Manipulator) library to dynamically change bitmap image colors for hours and minutes.
 
 Todo:
-- Add support for other date formats (currently only DDMM)
 - Experiment with adding glow effect to digits
 - Make OG Pebble-compatible version
+- More Todos in the github issue tracker

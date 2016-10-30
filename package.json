@@ -1,6 +1,8 @@
 {
     "author": "Sam Carton",
-    "dependencies": {},
+    "dependencies": {
+        "pebble-clay": "^1.0.3"
+    },
     "keywords": [],
     "name": "miami-nights",
     "pebble": {
@@ -8,14 +10,19 @@
             "configurable"
         ],
         "displayName": "Miami Nights",
-        "enableMultiJS": false,
-        "messageKeys": {
-            "KEY_BT_TOGGLE": 1,
-            "KEY_DATE_FORMAT": 0,
-            "KEY_DAY_TOGGLE": 4,
-            "KEY_LA_TOGGLE": 3,
-            "KEY_LZ_TOGGLE": 2
-        },
+        "enableMultiJS": true,
+        "messageKeys": [
+            "DateFormat",
+            "Bluetooth",
+            "LeadingZero",
+            "LeftAlign",
+            "ShowDay",
+            "HoursColor",
+            "MinutesColor",
+            "DayColor",
+            "DateColor",
+            "BackgroundColor"
+        ],
         "projectType": "native",
         "resources": {
             "media": [
@@ -96,5 +103,5 @@
             "watchface": true
         }
     },
-    "version": "1.2.0"
+    "version": "1.3.0"
 }

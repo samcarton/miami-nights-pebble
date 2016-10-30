@@ -322,7 +322,7 @@ static void window_load(Window *window) {
   text_layer_set_font(date_text_layer, s_font_teko_sb_20);
   layer_add_child(window_layer, text_layer_get_layer(date_text_layer));
   
-  day_text_layer = text_layer_create(GRect(20, 145, 144, 50));
+  day_text_layer = text_layer_create(GRect(24, 145, 144, 50));
   text_layer_set_text_color(day_text_layer, GColorMalachite);
   text_layer_set_background_color(day_text_layer, GColorClear);
   text_layer_set_text(day_text_layer, day_text);
@@ -339,6 +339,7 @@ static void window_load(Window *window) {
 
 static void window_unload(Window *window) {
   text_layer_destroy(date_text_layer);
+  text_layer_destroy(day_text_layer);
   fonts_unload_custom_font(s_font_teko_sb_20);
   unload_bitmap(&hours_tens_layer, &hours_tens);
   unload_bitmap(&hours_ones_layer, &hours_ones);
@@ -359,7 +360,7 @@ static void bt_handler(bool connected) {
 
 static void inbox_received_handler(DictionaryIterator *iter, void *context) {
   
-  Tuple* bluetooth_toggle_t = dict_find(iter, KEY_BT_TOGGLE);
+  Tuple* bluetooth_toggle_t = dict_find(iter, MESSAGE_KEY_Bluetooth);
   if(bluetooth_toggle_t && bluetooth_toggle_t->value->int32 > 0) {
     
     // Enable bluetooth notification
@@ -377,7 +378,7 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
     persist_write_bool(KEY_BT_TOGGLE, false);
   }
   
-  Tuple* date_format_t = dict_find(iter, KEY_DATE_FORMAT);  
+  Tuple* date_format_t = dict_find(iter, MESSAGE_KEY_DateFormat);  
   if(date_format_t) {
     
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "Date Format: %s", date_format_t->value->cstring);
@@ -388,7 +389,7 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
     persist_write_string(KEY_DATE_FORMAT, date_format_t->value->cstring);
   }
   
-  Tuple* show_day_t = dict_find(iter, KEY_DAY_TOGGLE);
+  Tuple* show_day_t = dict_find(iter, MESSAGE_KEY_ShowDay);
   if(show_day_t && show_day_t->value->int32 > 0) {
     show_day = true;
     update_show_day();
@@ -403,7 +404,7 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
     persist_write_bool(KEY_DAY_TOGGLE, false);
   }
   
-  Tuple* leading_zero_toggle_t = dict_find(iter, KEY_LZ_TOGGLE);
+  Tuple* leading_zero_toggle_t = dict_find(iter, MESSAGE_KEY_LeadingZero);
   if(leading_zero_toggle_t && leading_zero_toggle_t->value->int32 > 0) {
     show_leading_zero = true;
     
@@ -416,7 +417,7 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
     persist_write_bool(KEY_LZ_TOGGLE, false);
   }
   
-  Tuple* left_align_toggle_t = dict_find(iter, KEY_LA_TOGGLE);
+  Tuple* left_align_toggle_t = dict_find(iter, MESSAGE_KEY_LeftAlign);
   if(left_align_toggle_t && left_align_toggle_t->value->int32 > 0) {
     left_align_hour = true;
     

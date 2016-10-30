@@ -1,6 +1,6 @@
 Pebble.addEventListener('showConfiguration', function(e) {
   // Show config page
-  Pebble.openURL('http://samcarton.github.io/miami-nights-pebble/config.v1.2.html');
+  Pebble.openURL('http://samcarton.github.io/miami-nights-pebble/config.v1.3.html');
 });
 
 Pebble.addEventListener('webviewclosed', function(e) {
@@ -15,6 +15,10 @@ Pebble.addEventListener('webviewclosed', function(e) {
   }
   
   dict['KEY_DATE_FORMAT'] = config_data['date_format'];
+  
+  if(config_data.day_toggle === true){
+    dict.KEY_DAY_TOGGLE = config_data.day_toggle;
+  }
   
   // leading zero toggle
   if(config_data['lz_toggle'] == true){

@@ -1,11 +1,12 @@
 #include <pebble.h>  
 #include "gbitmap_color_palette_manipulator.h"
+#include "src/c/str-util.h"
 
-  
 #define KEY_DATE_FORMAT 0
 #define KEY_BT_TOGGLE 1
 #define KEY_LZ_TOGGLE 2
 #define KEY_LA_TOGGLE 3
+#define KEY_DAY_TOGGLE 4
   
 static bool is24hrFormat = true;
 
@@ -22,6 +23,11 @@ const char MMDD_FORMAT_KEY[] = "MMDD";
 const char OFF_FORMAT_KEY[] = "OFF";
 static char PERSISTED_FORMAT[] = "DDMM";
 static GFont s_font_teko_sb_20;
+static bool show_date = true;
+
+TextLayer* day_text_layer;
+static char day_text[] = "\0\0\0\0";
+static bool show_day = true;
 
 static BitmapLayer* hours_tens_layer = NULL;
 static BitmapLayer* hours_ones_layer = NULL;
@@ -211,6 +217,9 @@ static unsigned short get_display_hour(unsigned short hour) {
 
 }
 
+
+
+
 static void handle_tick(struct tm *tick_time, TimeUnits units_changed){  
 #ifdef DEBUGTIME
   int hours = get_display_hour(debugHours);
@@ -240,34 +249,57 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed){
   
   strftime(date_text, sizeof(date_text), dateFormat, tick_time);
   text_layer_set_text(date_text_layer, date_text);
+  
+  strftime(day_text, sizeof(day_text), "%a", tick_time);
+  str_to_upper(day_text);
+  text_layer_set_text(day_text_layer, day_text);
+}
+
+static void update_y_positioning()
+{
+  if(show_date || show_day) {
+    top_y = TOP_Y_WITH_DATE;
+    mins_spacing_y = MINS_SPACING_Y_WITH_DATE;
+    force_tick();
+    return;
+  }
+  
+  top_y = TOP_Y_WITHOUT_DATE;
+  mins_spacing_y = MINS_SPACING_Y_WITHOUT_DATE;
+  force_tick();
+}
+
+static void update_show_day(){
+  layer_set_hidden(text_layer_get_layer(day_text_layer), !show_day);
+  update_y_positioning();
 }
 
 static void set_date_format(char* dateFormatOption)
 {
   if(strcmp(OFF_FORMAT_KEY, dateFormatOption) == 0)   {
     strcpy(dateFormat, "\0");
-    layer_set_hidden(text_layer_get_layer(date_text_layer), true);    
-    top_y = TOP_Y_WITHOUT_DATE;
-    mins_spacing_y = MINS_SPACING_Y_WITHOUT_DATE;
-    force_tick();
+    layer_set_hidden(text_layer_get_layer(date_text_layer), true);
+    show_date = false;
+    
+    update_y_positioning();
     return;
   }
   
   if(strcmp(DDMM_FORMAT_KEY, dateFormatOption) == 0){
     strcpy(dateFormat, DDMMdateFormat);
     layer_set_hidden(text_layer_get_layer(date_text_layer), false);
-    top_y = TOP_Y_WITH_DATE;
-    mins_spacing_y = MINS_SPACING_Y_WITH_DATE;
-    force_tick();
+    show_date = true;    
+    
+    update_y_positioning();
     return;
   }
   
   if(strcmp(MMDD_FORMAT_KEY, dateFormatOption) == 0){
     strcpy(dateFormat, MMDDdateFormat);
     layer_set_hidden(text_layer_get_layer(date_text_layer), false);
-    top_y = TOP_Y_WITH_DATE;
-    mins_spacing_y = MINS_SPACING_Y_WITH_DATE;
-    force_tick();
+    show_date = true;
+    
+    update_y_positioning();
     return;
   }
 }
@@ -283,12 +315,19 @@ static void window_load(Window *window) {
   
   s_font_teko_sb_20 = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_TEKO_SB_20));
   
-  date_text_layer = text_layer_create(GRect(77, 145, 144, 50));
+  date_text_layer = text_layer_create(GRect(87, 145, 144, 50));
   text_layer_set_text_color(date_text_layer, GColorMalachite);
   text_layer_set_background_color(date_text_layer, GColorClear);
   text_layer_set_text(date_text_layer, date_text);
   text_layer_set_font(date_text_layer, s_font_teko_sb_20);
   layer_add_child(window_layer, text_layer_get_layer(date_text_layer));
+  
+  day_text_layer = text_layer_create(GRect(20, 145, 144, 50));
+  text_layer_set_text_color(day_text_layer, GColorMalachite);
+  text_layer_set_background_color(day_text_layer, GColorClear);
+  text_layer_set_text(day_text_layer, day_text);
+  text_layer_set_font(day_text_layer, s_font_teko_sb_20);
+  layer_add_child(window_layer, text_layer_get_layer(day_text_layer));
     
   app_message_register_inbox_received(inbox_received_handler);
   app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
@@ -349,6 +388,21 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
     persist_write_string(KEY_DATE_FORMAT, date_format_t->value->cstring);
   }
   
+  Tuple* show_day_t = dict_find(iter, KEY_DAY_TOGGLE);
+  if(show_day_t && show_day_t->value->int32 > 0) {
+    show_day = true;
+    update_show_day();
+    
+    // Persist value
+    persist_write_bool(KEY_DAY_TOGGLE, true);    
+  } else {
+    show_day = false;
+    update_show_day();
+    
+    // persist
+    persist_write_bool(KEY_DAY_TOGGLE, false);
+  }
+  
   Tuple* leading_zero_toggle_t = dict_find(iter, KEY_LZ_TOGGLE);
   if(leading_zero_toggle_t && leading_zero_toggle_t->value->int32 > 0) {
     show_leading_zero = true;
@@ -383,6 +437,13 @@ void apply_persisted_values() {
     persist_read_string(KEY_DATE_FORMAT, PERSISTED_FORMAT, sizeof(PERSISTED_FORMAT));
     set_date_format(PERSISTED_FORMAT);
   }
+  
+  if(persist_exists(KEY_DAY_TOGGLE)){
+    show_day = persist_read_bool(KEY_DAY_TOGGLE);
+    
+    update_show_day();
+  }
+  
   if(persist_exists(KEY_BT_TOGGLE)){
     if(persist_read_bool(KEY_BT_TOGGLE)){
       bluetooth_connection_service_subscribe(bt_handler);

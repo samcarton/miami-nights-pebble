@@ -1,0 +1,100 @@
+{
+    "author": "Sam Carton",
+    "dependencies": {},
+    "keywords": [],
+    "name": "miami-nights",
+    "pebble": {
+        "capabilities": [
+            "configurable"
+        ],
+        "displayName": "Miami Nights",
+        "enableMultiJS": false,
+        "messageKeys": {
+            "KEY_BT_TOGGLE": 1,
+            "KEY_DATE_FORMAT": 0,
+            "KEY_DAY_TOGGLE": 4,
+            "KEY_LA_TOGGLE": 3,
+            "KEY_LZ_TOGGLE": 2
+        },
+        "projectType": "native",
+        "resources": {
+            "media": [
+                {
+                    "file": "images/Icon1984Sml25.png",
+                    "menuIcon": true,
+                    "name": "MENU_ICON25",
+                    "targetPlatforms": [
+                        "basalt"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/9.png",
+                    "name": "IMAGE_B_TL_9",
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/8.png",
+                    "name": "IMAGE_B_TL_8",
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/7.png",
+                    "name": "IMAGE_B_TL_7",
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/6.png",
+                    "name": "IMAGE_B_TL_6",
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/5.png",
+                    "name": "IMAGE_B_TL_5",
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/4.png",
+                    "name": "IMAGE_B_TL_4",
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/3.png",
+                    "name": "IMAGE_B_TL_3",
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/2.png",
+                    "name": "IMAGE_B_TL_2",
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/1.png",
+                    "name": "IMAGE_B_TL_1",
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/0.png",
+                    "name": "IMAGE_B_TL_0",
+                    "type": "bitmap"
+                },
+                {
+                    "characterRegex": "[0-9:A-Za-z ]",
+                    "file": "fonts/Teko-SemiBold.ttf",
+                    "name": "FONT_TEKO_SB_20",
+                    "targetPlatforms": null,
+                    "type": "font"
+                }
+            ]
+        },
+        "sdkVersion": "3",
+        "targetPlatforms": [
+            "basalt"
+        ],
+        "uuid": "633c5168-a727-454d-ad8f-34b06834e410",
+        "watchapp": {
+            "watchface": true
+        }
+    },
+    "version": "1.2.0"
+}

@@ -128,6 +128,12 @@ module.exports = [
         "defaultValue": "000000",
         "label": "Background"
       },
+      {
+        "type": "button",
+        "primary": true,
+        "defaultValue": "Reset Colors",
+        "id": "reset-colors-button"
+      },
     ]
   },
   {

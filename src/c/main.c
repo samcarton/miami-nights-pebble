@@ -7,6 +7,7 @@
 #define KEY_LZ_TOGGLE 2
 #define KEY_LA_TOGGLE 3
 #define KEY_DAY_TOGGLE 4
+#define KEY_SETTINGS 5
   
 static bool is24hrFormat = true;
 
@@ -49,6 +50,16 @@ const int MINS_SPACING_Y_WITHOUT_DATE = 79;
 
 static bool show_leading_zero = true;
 static bool left_align_hour = false;
+
+typedef struct Settings {
+  GColor hours_color;
+	GColor minutes_color;
+	GColor day_color;
+	GColor date_color;
+	GColor background_color;
+} Settings;
+
+static Settings settings;
 
 
 // Font is "True Lies" by Jonathan S. Harris
@@ -128,7 +139,7 @@ static void update_hours(unsigned short hours){
     hoursTensSpacing = 5;
     
     if(show_leading_zero){
-      load_bitmap(0,&hours_tens_layer, &hours_tens, GColorCyan, 2, top_y); //0 
+      load_bitmap(0,&hours_tens_layer, &hours_tens, settings.hours_color, 2, top_y); //0 
     }
     else{
       unload_bitmap(&hours_tens_layer, &hours_tens);
@@ -143,11 +154,11 @@ static void update_hours(unsigned short hours){
     int hourTens = hours/10;
     if(hourTens == 1)
     {
-      load_bitmap(hourTens,&hours_tens_layer, &hours_tens, GColorCyan, 22, top_y); //1
+      load_bitmap(hourTens,&hours_tens_layer, &hours_tens, settings.hours_color, 22, top_y); //1
     }
     else // 2
     {
-      load_bitmap(hourTens,&hours_tens_layer, &hours_tens, GColorCyan, 2, top_y); //2       
+      load_bitmap(hourTens,&hours_tens_layer, &hours_tens, settings.hours_color, 2, top_y); //2       
       hoursTensSpacing = 14;
     }    
   }
@@ -158,7 +169,7 @@ static void update_hours(unsigned short hours){
     if(show_leading_zero == true || (show_leading_zero == false && left_align_hour == false)) {
       hoursOnesX += 9;
     }
-    load_bitmap(0,&hours_ones_layer, &hours_ones, GColorCyan, hoursOnesX, top_y);   
+    load_bitmap(0,&hours_ones_layer, &hours_ones, settings.hours_color, hoursOnesX, top_y);   
   }
   else
   {    
@@ -172,7 +183,7 @@ static void update_hours(unsigned short hours){
       }
       hoursOnesX = hoursOnesX + ONES_SPACINGS[hourOnes];
     }
-    load_bitmap(hourOnes,&hours_ones_layer, &hours_ones, GColorCyan, hoursOnesX, top_y); 
+    load_bitmap(hourOnes,&hours_ones_layer, &hours_ones, settings.hours_color, hoursOnesX, top_y); 
   }    
 }
 
@@ -181,15 +192,15 @@ static void update_minutes(unsigned short minutes){
   
   //tens
   if(minutes<10){    
-    load_bitmap(0,&minutes_tens_layer, &minutes_tens, GColorMagenta, 5, top_y + mins_spacing_y) ;
+    load_bitmap(0,&minutes_tens_layer, &minutes_tens, settings.minutes_color, 5, top_y + mins_spacing_y) ;
   }
   else{
     unsigned short minuteTens = minutes/10;
     if(minuteTens == 1){
-      load_bitmap(minuteTens,&minutes_tens_layer, &minutes_tens, GColorMagenta, 31, top_y + mins_spacing_y) ;  
+      load_bitmap(minuteTens,&minutes_tens_layer, &minutes_tens, settings.minutes_color, 31, top_y + mins_spacing_y) ;  
     }
     else{
-      load_bitmap(minuteTens,&minutes_tens_layer, &minutes_tens, GColorMagenta, 5, top_y + mins_spacing_y) ;
+      load_bitmap(minuteTens,&minutes_tens_layer, &minutes_tens, settings.minutes_color, 5, top_y + mins_spacing_y) ;
       if(minuteTens == 5 && minutes != 55){
         minutesTensSpacing = 5;
       }
@@ -201,7 +212,7 @@ static void update_minutes(unsigned short minutes){
   
   //ones
   unsigned short minuteOnes = minutes%10;
-  load_bitmap(minuteOnes,&minutes_ones_layer, &minutes_ones, GColorMagenta, 57 + ONES_SPACINGS[minuteOnes] + minutesTensSpacing, top_y + mins_spacing_y) ;
+  load_bitmap(minuteOnes,&minutes_ones_layer, &minutes_ones, settings.minutes_color, 57 + ONES_SPACINGS[minuteOnes] + minutesTensSpacing, top_y + mins_spacing_y) ;
   
 }
 
@@ -316,14 +327,14 @@ static void window_load(Window *window) {
   s_font_teko_sb_20 = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_TEKO_SB_20));
   
   date_text_layer = text_layer_create(GRect(87, 145, 144, 50));
-  text_layer_set_text_color(date_text_layer, GColorMalachite);
+  text_layer_set_text_color(date_text_layer, settings.date_color);
   text_layer_set_background_color(date_text_layer, GColorClear);
   text_layer_set_text(date_text_layer, date_text);
   text_layer_set_font(date_text_layer, s_font_teko_sb_20);
   layer_add_child(window_layer, text_layer_get_layer(date_text_layer));
   
   day_text_layer = text_layer_create(GRect(24, 145, 144, 50));
-  text_layer_set_text_color(day_text_layer, GColorMalachite);
+  text_layer_set_text_color(day_text_layer, settings.day_color);
   text_layer_set_background_color(day_text_layer, GColorClear);
   text_layer_set_text(day_text_layer, day_text);
   text_layer_set_font(day_text_layer, s_font_teko_sb_20);
@@ -357,6 +368,13 @@ static void bt_handler(bool connected) {
     vibes_double_pulse(); // vibrate two short pulses when connection is lost
   }
 }
+
+static void update_colors()  {
+  window_set_background_color(_window, settings.background_color);
+  text_layer_set_text_color(date_text_layer, settings.date_color);
+  text_layer_set_text_color(day_text_layer, settings.day_color);
+}
+
 
 static void inbox_received_handler(DictionaryIterator *iter, void *context) {
   
@@ -430,8 +448,38 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
     persist_write_bool(KEY_LA_TOGGLE, false);
   }
   
+  Tuple *hours_color_t = dict_find(iter, MESSAGE_KEY_HoursColor);
+  if (hours_color_t) {
+    settings.hours_color = GColorFromHEX(hours_color_t->value->int32);
+  }
+  
+  Tuple *minutes_color_t = dict_find(iter, MESSAGE_KEY_MinutesColor);
+  if (minutes_color_t) {
+    settings.minutes_color = GColorFromHEX(minutes_color_t->value->int32);
+  }
+  
+  Tuple *date_color_t = dict_find(iter, MESSAGE_KEY_DateColor);
+  if (date_color_t) {
+    settings.date_color = GColorFromHEX(date_color_t->value->int32);
+  }
+  
+  Tuple *day_color_t = dict_find(iter, MESSAGE_KEY_DayColor);
+  if (day_color_t) {
+    settings.day_color = GColorFromHEX(day_color_t->value->int32);
+  }
+  
+  Tuple *bg_color_t = dict_find(iter, MESSAGE_KEY_BackgroundColor);
+  if (bg_color_t) {
+    settings.background_color = GColorFromHEX(bg_color_t->value->int32);
+  }
+  
+  persist_write_data(KEY_SETTINGS, &settings, sizeof(settings));
+  
   force_tick();
+  update_colors();
 }
+
+
 
 void apply_persisted_values() {  
   if(persist_exists(KEY_DATE_FORMAT)){
@@ -466,14 +514,17 @@ void apply_persisted_values() {
   }
   else{ // default to disable leftalign hour
     left_align_hour = false;
-  }    
+  }
+  
+  persist_read_data(KEY_SETTINGS, &settings, sizeof(settings));
+  update_colors();
 }
 
 void handle_init(void) {  
   is24hrFormat = clock_is_24h_style();
   
   _window = window_create();
-  window_set_background_color(_window, GColorBlack);
+  window_set_background_color(_window, settings.background_color);
   window_set_window_handlers(_window, (WindowHandlers) {.load = window_load, .unload = window_unload});
     
   window_stack_push(_window, true);
@@ -494,6 +545,14 @@ void handle_deinit(void) {
 }
 
 int main(void) {  
+  settings = (Settings) {
+  	.hours_color = GColorCyan,
+  	.minutes_color = GColorMagenta,
+  	.day_color = GColorMalachite,
+  	.date_color = GColorMalachite,
+  	.background_color = GColorBlack
+  };
+  
   handle_init();
   app_event_loop();
   handle_deinit();
